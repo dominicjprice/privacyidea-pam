@@ -83,6 +83,11 @@ void getConfig(pam_handle_t *pamh, int argc, const char **argv, Config &config)
             config.sendEmptyPass = true;
             pam_syslog(pamh, LOG_DEBUG, "Setting sendEmptyPass=true\n");
         }
+        else if (tmp == "forwardPass")
+        {
+            config.forwardPass = true;
+            pam_syslog(pamh, LOG_DEBUG, "Setting forwardPass=true\n");
+        }
         else if (tmp == "sendPassword")
         {
             config.sendPassword = true;
@@ -193,6 +198,27 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, cons
     else if (config.sendEmptyPass)
     {
         retval = privacyidea.validateCheck(username, "", "", oldResponse);
+    }
+    else if (config.forwardPass)
+    {
+        // Assume that last siz characters are OTP, rest are normal password
+        const char *authtok = NULL; // Do not free/overwrite where this points to
+        retval = pam_get_authtok(pamh, PAM_AUTHTOK, &authtok, NULL);
+        if (retval != PAM_SUCCESS)
+        {
+            pam_syslog(pamh, LOG_ERR, "Unable to retrieve authtok with error %d", retval);
+            return PAM_SERVICE_ERR;
+        }
+        string pass_and_otp(authtok);
+        string otp = pass_and_otp.substr(pass_and_otp.length() - 6);
+        string pw = pass_and_otp.substr(0, pass_and_otp.length() - 6);
+        retval = pam_set_item(pamh, PAM_AUTHTOK, pw.c_str());
+        if (retval != PAM_SUCCESS)
+        {
+            pam_syslog(pamh, LOG_ERR, "Unable to set authtok with error %d", retval);
+            return PAM_AUTH_ERR;
+        }
+        retval = privacyidea.validateCheck(username, otp, "", oldResponse);
     }
     else
     {

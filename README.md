@@ -36,6 +36,7 @@ The following values (case-sensitive!) can be appended to the pam config file li
 |pollTime=|Set the time in seconds to poll for successful push auth. Default is 0, meaning only once. Polls twice per second.|
 |prompt=|Set the default prompt text for the OTP. Note: If you want to use spaces in your text, use [] like [prompt=Text with spaces].|
 |debug|Enable debug logging.|
+|forwardPass|Treats the entered pass as password+otp, verifies the OTP before sending the password to the next PAM module. Useful in situations where extra input cannot be requested (e.g. when logging in via XRDP). Assumes that the OTP length is 6.|
 
 ### Example
 

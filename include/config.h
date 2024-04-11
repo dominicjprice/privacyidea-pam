@@ -10,6 +10,7 @@ struct Config
     bool debug = false;
     bool sendEmptyPass = false;
     bool sendPassword = false;
+    bool forwardPass = false;
     std::string realm;
     std::string promptText;
     std::string offlineFile;
